@@ -1,0 +1,40 @@
+{
+  "name": "lts/microdeps-installer",
+  "type": "library",
+  "description": "A micro dependency installer designer to simply copying Microdeps into first party code",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Joseph Edmonds",
+      "email": "joseph@ltscommerce.dev"
+    }
+  ],
+  "require": {
+    "php": "^8.0",
+  },
+  "require-dev": {
+    "lts/php-qa-ci": "dev-master@dev"
+  },
+  "config": {
+    "bin-dir": "bin",
+    "optimize-autoloader": true,
+    "preferred-install": {
+      "*": "dist"
+    }
+  },
+  "autoload": {
+    "psr-4": {
+      "MicroDeps\\Installer\\": [
+        "src/"
+      ]
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "MicroDeps\\Installer\\Tests\\": [
+        "tests/"
+      ]
+    }
+  },
+  "minimum-stability": "stable"
+}
