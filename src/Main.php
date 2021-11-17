@@ -23,8 +23,6 @@ class Main
         $this->assertValidTestsDir();
     }
 
-    private function copy()
-
     private function assertValidVendorDir(): void
     {
         $vendorDir = $this->args->getVendorDir();

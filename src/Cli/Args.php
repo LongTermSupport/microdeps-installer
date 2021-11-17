@@ -13,31 +13,12 @@ class Args
     )]
     public const  ARG_VENDOR_DIR = 'vendorDir';
 
-    #[UsageAttribute(
-        'The relative path (from project root) to the folder that you want to install the src files to ',
-        self::DEFAULT_SRC_DIR
-    )]
-    public const  ARG_SRC_DIR     = 'srcDir';
-    public const  DEFAULT_SRC_DIR = 'src/MicroDeps';
-
-    public const  ARG_TESTS_DIR     = 'testsDir';
-    public const  DEFAULT_TESTS_DIR = 'tests/MicroDeps';
-
-
     private const MIN_ARGS = 1;
-    private const MAX_ARGS = 2;
+    private const MAX_ARGS = 1;
 
     private string $vendorDir;
 
-    #[UsageAttribute(
-        'The relative path (from project root) to the folder that you want to install the tests files to ',
-        self::DEFAULT_TESTS_DIR
-    )]
-    private string $srcDir   = self::DEFAULT_SRC_DIR;
-    private string $testsDir = self::DEFAULT_TESTS_DIR;
-
-
-    public function __construct(private array $argv)
+       public function __construct(private array $argv)
     {
         if (PHP_SAPI !== 'cli') {
             throw new \RuntimeException('This class only works in command line PHP');
@@ -58,7 +39,6 @@ class Args
             [$argKey, $argVal] = explode(self::EQUALS, $arg);
             match ($argKey) {
                 self::ARG_VENDOR_DIR => $this->vendorDir = $argVal,
-                self::ARG_SRC_DIR => $this->srcDir = $argVal,
                 default => throw new \InvalidArgumentException('Invalid argument ' . $argKey)
             };
         }
