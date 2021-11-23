@@ -1,0 +1,17 @@
+{
+  "name": "foo/bar",
+  "autoload": {
+    "psr-4": {
+      "Foo\\Bar\\": [
+        "src/"
+      ]
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Foo\\Bar\\Tests\\": [
+        "tests/"
+      ]
+    }
+  }
+}

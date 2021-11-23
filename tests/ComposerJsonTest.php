@@ -70,7 +70,7 @@ class ComposerJsonTest extends TestCase
         new ComposerJson('{foo:}');
     }
 
-    public function provideMissingAutload(): \Generator
+    public function provideMissingAutoload(): \Generator
     {
         yield 'typo autoload' => [
             <<<'JSON'
@@ -118,7 +118,7 @@ class ComposerJsonTest extends TestCase
     }
 
     /**
-     * @dataProvider provideMissingAutload
+     * @dataProvider provideMissingAutoload
      * @test
      */
     public function itThrowsExpectionOnMissingAutoload(string $json, string $key): void

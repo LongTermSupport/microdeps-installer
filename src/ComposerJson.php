@@ -18,6 +18,21 @@ class ComposerJson
     public const KEY_AUTOLOAD                           = 'autoload';
     public const KEY_AUTOLOAD_DEV                       = 'autoload-dev';
 
+    public static function fromDirectory(string $pathToDirectory): self
+    {
+        return self::fromFile($pathToDirectory . '/composer.json');
+    }
+
+    public static function fromFile(string $pathToFile): self
+    {
+        $jsonString = file_get_contents($pathToFile);
+        if (false === $jsonString) {
+            throw new \InvalidArgumentException('Failed getting contents of file at ' . $pathToFile);
+        }
+
+        return new self($jsonString);
+    }
+
     public function __construct(private string $composerJson)
     {
         try {

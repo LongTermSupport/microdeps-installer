@@ -18,7 +18,7 @@ class Args
 
     private string $vendorDir;
 
-       public function __construct(private array $argv)
+    public function __construct(private array $argv)
     {
         if (PHP_SAPI !== 'cli') {
             throw new \RuntimeException('This class only works in command line PHP');
@@ -48,7 +48,7 @@ class Args
     {
         printf("\nUsage:\n %s with the following arguments:\n\n", $this->argv[0]);
         /** @var \ReflectionClassConstant[] $consts */
-        $consts = (new \ReflectionClass($this))->getConstants(\ReflectionClassConstant::IS_PUBLIC);
+        $consts = (new \ReflectionClass($this))->getReflectionConstants(\ReflectionClassConstant::IS_PUBLIC);
         foreach ($consts as $const) {
             $attribs = $const->getAttributes(UsageAttribute::class);
             if ([] === $attribs) {
@@ -69,15 +69,5 @@ class Args
         }
 
         return $this->vendorDir;
-    }
-
-    public function getSrcDir(): string
-    {
-        return $this->srcDir;
-    }
-
-    public function getTestsDir(): string
-    {
-        return $this->testsDir;
     }
 }
