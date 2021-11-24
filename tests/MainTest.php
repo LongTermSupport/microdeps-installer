@@ -34,11 +34,28 @@ class MainTest extends TestCase
             self::WORK_DIR
         );
         $main->run();
-        self::assertDirectoryExists(self::WORK_DIR . '/src/' . Main::INSTALL_NAMESPACE);
-        self::assertDirectoryExists(self::WORK_DIR . '/src/' . Main::INSTALL_NAMESPACE . '/Baz');
-        self::assertDirectoryExists(self::WORK_DIR . '/src/' . Main::INSTALL_NAMESPACE . '/Baz/Taz');
-        self::assertDirectoryExists(self::WORK_DIR . '/tests/' . Main::INSTALL_NAMESPACE);
-        self::assertDirectoryExists(self::WORK_DIR . '/tests/' . Main::INSTALL_NAMESPACE . '/Baz');
-        self::assertDirectoryExists(self::WORK_DIR . '/tests/' . Main::INSTALL_NAMESPACE . '/Baz/Taz');
+        self::assertDirectoryExists(self::WORK_DIR . '/src/' . Main::INSTALL_NAMESPACE . '/Bar/');
+        self::assertDirectoryExists(self::WORK_DIR . '/src/' . Main::INSTALL_NAMESPACE . '/Bar/Baz');
+        self::assertDirectoryExists(self::WORK_DIR . '/src/' . Main::INSTALL_NAMESPACE . '/Bar/Baz/Taz');
+        self::assertDirectoryExists(self::WORK_DIR . '/tests/' . Main::INSTALL_NAMESPACE . '/Bar/');
+        self::assertDirectoryExists(self::WORK_DIR . '/tests/' . Main::INSTALL_NAMESPACE . '/Bar/Baz');
+        self::assertDirectoryExists(self::WORK_DIR . '/tests/' . Main::INSTALL_NAMESPACE . '/Bar/Baz/Taz');
+        self::assertNamespace(
+            self::WORK_DIR . '/src/' . Main::INSTALL_NAMESPACE . '/Bar/Baz/Taz/Waz.php',
+            'Test\\Project\\MicroDeps\\Bar\\Baz\\Taz'
+        );
+        self::assertNamespace(
+            self::WORK_DIR . '/src/' . Main::INSTALL_NAMESPACE . '/Bar/Baz/Bop.php',
+            'Test\\Project\\MicroDeps\\Bar\\Baz'
+        );
+
+    }
+
+    private static function assertNamespace(string $filePath, string $expected): void
+    {
+        $contents = \Safe\file_get_contents($filePath);
+        \Safe\preg_match('%^namespace (.+?);%m', $contents, $matches);
+        $actual = $matches[1] ?? self::fail('No namespace match in ' . substr($contents, 0, 100) . '...');
+        self::assertSame($expected, $actual);
     }
 }

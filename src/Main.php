@@ -5,8 +5,14 @@ declare(strict_types=1);
 namespace MicroDeps\Installer;
 
 use Composer\Autoload\ClassLoader;
+use FilesystemIterator;
+use InvalidArgumentException;
 use MicroDeps\Installer\Cli\Args;
+use RecursiveIteratorIterator;
+use ReflectionClass;
+use RuntimeException;
 use Symfony\Component\Filesystem\Filesystem;
+use Webmozart\Glob\Iterator\RecursiveDirectoryIterator;
 
 class Main
 {
@@ -19,7 +25,7 @@ class Main
     public function __construct(private Args $args, private Filesystem $filesystem, string $overrideProjectRoot = null)
     {
         if (PHP_SAPI !== 'cli') {
-            throw new \RuntimeException('This class only works in command line PHP');
+            throw new RuntimeException('This class only works in command line PHP');
         }
         $this->projectRoot = $overrideProjectRoot ?? $this->getProjectRoot();
     }
@@ -33,24 +39,52 @@ class Main
         $this->copyTest();
     }
 
+    private function getSecondTierNamespace(string $namespace): string
+    {
+        return explode('\\', $namespace)[1]
+               ?? throw new \RuntimeException('Failed getting second tied namespace from ' . $namespace);
+    }
+
+    private function getInstallSubNamespace(string $vendorNamespace): string
+    {
+        return self::INSTALL_NAMESPACE . '\\' . $this->getSecondTierNamespace($vendorNamespace);
+    }
+
+    private function getInstallSubPath(string $vendorNamespace): string
+    {
+        return str_replace('\\', '/', $this->getInstallSubNamespace($vendorNamespace));
+    }
+
     private function copySrc()
     {
-        $srcSrcPath  = $this->vendorDir . '/' . $this->vendorComposer->getSrcPath();
-        $srcDestPath = $this->projectRoot.'/'.$this->projectComposer->getSrcPath() . '/' . self::INSTALL_NAMESPACE . '/';
-        $this->copyDir($srcSrcPath, $srcDestPath);
-        $originNamespace = rtrim($this->vendorComposer->getSrcNamespace(), '\\');
-        $newNamespace    = rtrim($this->projectComposer->getSrcNamespace() . '\\' . self::INSTALL_NAMESPACE, '\\');
-        $this->updateNamespace($originNamespace, $newNamespace, $srcDestPath);
+        $vendorNamespace = $this->vendorComposer->getSrcNamespace();
+        $srcFromPath     = $this->vendorDir . '/' . $this->vendorComposer->getSrcPath();
+        $srcToPath       = $this->projectRoot . '/' . $this->projectComposer->getSrcPath() . '/' .
+                           $this->getInstallSubPath($vendorNamespace) . '/';
+        $this->copyDir($srcFromPath, $srcToPath);
+        $originNamespace = rtrim($vendorNamespace, '\\');
+        $newNamespace    =
+            rtrim($this->projectComposer->getSrcNamespace() .
+                  '\\' .
+                  $this->getInstallSubNamespace($vendorNamespace) .
+                  '\\');
+        $this->updateNamespace($originNamespace, $newNamespace, $srcToPath);
     }
 
     private function copyTest()
     {
-        $testSrcPath  = $this->vendorDir . '/' . $this->vendorComposer->getTestPath();
-        $testDestPath = $this->projectRoot.'/'.$this->projectComposer->getTestPath() . '/' . self::INSTALL_NAMESPACE . '/';
-        $this->copyDir($testSrcPath, $testDestPath);
-        $originNamespace = rtrim($this->vendorComposer->getTestNamespace(), '\\');
-        $newNamespace    = rtrim($this->projectComposer->getTestNamespace() . '\\' . self::INSTALL_NAMESPACE, '\\');
-        $this->updateNamespace($originNamespace, $newNamespace, $testDestPath);
+        $vendorNamespace = $this->vendorComposer->getTestNamespace();
+        $testFromPath    = $this->vendorDir . '/' . $this->vendorComposer->getTestPath();
+        $testToPath      = $this->projectRoot . '/' . $this->projectComposer->getTestPath() . '/' .
+                           $this->getInstallSubPath($vendorNamespace) . '/';
+        $this->copyDir($testFromPath, $testToPath);
+        $originNamespace = rtrim($vendorNamespace, '\\');
+        $newNamespace    =
+            rtrim($this->projectComposer->getTestNamespace() .
+                  '\\' .
+                  $this->getInstallSubNamespace($vendorNamespace) .
+                  '\\');
+        $this->updateNamespace($originNamespace, $newNamespace, $testToPath);
     }
 
     private function copyDir(string $src, string $dest): void
@@ -61,23 +95,43 @@ class Main
 
     private function updateNamespace($originNamespace, $newNamespace, string $dir): void
     {
-        $files = glob("$dir/*.php");
-        foreach ($files as $filename) {
-            $content = \Safe\file_get_contents($filename);
-            $updated = str_replace($originNamespace, $newNamespace, $content);
-            \Safe\file_put_contents($filename, $updated);
+        $iterator = new \RegexIterator(
+            new RecursiveIteratorIterator(
+                new RecursiveDirectoryIterator(
+                    $dir,
+                    FilesystemIterator::KEY_AS_PATHNAME |
+                    FilesystemIterator::CURRENT_AS_FILEINFO |
+                    FilesystemIterator::SKIP_DOTS
+                ),
+                RecursiveIteratorIterator::SELF_FIRST
+            ),
+            '%^.+?\.php$%',
+            \RegexIterator::GET_MATCH
+        );
+        /** @var string[] $matches */
+        foreach ($iterator as $matches) {
+            $filePath = $matches[0] ?? throw new \RuntimeException('Unexpected empty match in ' . __METHOD__);
+            $content  = \Safe\file_get_contents($filePath);
+            $updated  = str_replace($originNamespace, $newNamespace, $content);
+            $updated  = $this->removeDoubleSlash($updated);
+            \Safe\file_put_contents($filePath, $updated);
         }
+    }
+
+    private function removeDoubleSlash(string $namespace): string
+    {
+        return preg_replace('%\\\{2,}%', '\\', $namespace);
     }
 
     private function getVendorDir(): string
     {
         $vendorDir = $this->args->getVendorDir();
         if (!is_dir($vendorDir) && !is_dir($vendorDir = $this->getProjectRoot() . $vendorDir)) {
-            throw new \InvalidArgumentException('vendor dir does not exist ' . $vendorDir);
+            throw new InvalidArgumentException('vendor dir does not exist ' . $vendorDir);
         }
         if (!file_exists("$vendorDir/composer.json")) {
-            throw new \InvalidArgumentException('vendor dir does not seem valid, no composer json found within ' .
-                                                $vendorDir);
+            throw new InvalidArgumentException('vendor dir does not seem valid, no composer json found within ' .
+                                               $vendorDir);
         }
 
         return $vendorDir;
@@ -85,6 +139,6 @@ class Main
 
     private function getProjectRoot(): string
     {
-        return dirname((new \ReflectionClass(ClassLoader::class))->getFileName(), 3) . '/';
+        return dirname((new ReflectionClass(ClassLoader::class))->getFileName(), 3) . '/';
     }
 }

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Foo\Bar\Baz\Taz;
+namespace Foo\Bar;
 
-class Waz
+class Biz
 {
 
 }
