@@ -1,0 +1,6 @@
+/var
+/vendor
+.idea
+.phpunit.result.cache
+/bin/*
+!bin/md

@@ -1,0 +1,17 @@
+{
+  "autoload": {
+    "psr-4": {
+      "Too\\Many\\": [
+        "src1/",
+        "src2/"
+      ]
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Too\\Many\\Tests\\": [
+        "tests/"
+      ]
+    }
+  }
+}
