@@ -2,4 +2,5 @@
 /vendor
 .idea
 .phpunit.result.cache
-/bin
+/bin/*
+!bin/md

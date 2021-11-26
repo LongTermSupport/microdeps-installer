@@ -20,10 +20,16 @@ class Args
 
     public function __construct(private array $argv)
     {
+        $this->parse();
+    }
+
+    public static function create(): self
+    {
         if (PHP_SAPI !== 'cli') {
             throw new \RuntimeException('This class only works in command line PHP');
         }
-        $this->parse();
+
+        return new self($_SERVER['argv']);
     }
 
     private function parse(): void

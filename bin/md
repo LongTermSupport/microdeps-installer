@@ -1,0 +1,22 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+use MicroDeps\Installer\Cli\Args;
+use MicroDeps\Installer\Main;
+use Symfony\Component\Filesystem\Filesystem;
+
+$autoloaderPath = (static function (): string {
+    foreach ([__DIR__ . '/../../../autoload.php', __DIR__ . '/../vendor/autoload.php'] as $file) {
+        if (file_exists($file)) {
+            return $file;
+        }
+    }
+    throw new \RuntimeException('Failed finding composer autoloader');
+})();
+
+/** Load the found autoloader */
+require $autoloaderPath;
+
+(new Main(Args::create(), new Filesystem()))->run();
