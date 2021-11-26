@@ -10,7 +10,12 @@ use Symfony\Component\Filesystem\Filesystem;
 $autoloaderPath = (static function (): string {
     foreach ([__DIR__ . '/../../../autoload.php', __DIR__ . '/../vendor/autoload.php'] as $file) {
         if (file_exists($file)) {
-            return $file;
+            $real = realpath($file);
+            if (false === $real) {
+                throw new \RuntimeException('Failed getting real path for ' . $file);
+            }
+
+            return $real;
         }
     }
     throw new \RuntimeException('Failed finding composer autoloader');
