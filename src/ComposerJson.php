@@ -72,7 +72,8 @@ class ComposerJson
             throw new \InvalidArgumentException(self::EXCEPTION_MULTIPLE_AUTOLOAD);
         }
         $namespace = (string)key($autoload);
-        $path      = (string)current(current($autoload));
+        $current   = current($autoload);
+        $path      = is_string($current) ? $current : current($current);
 
         return [$namespace, $path];
     }

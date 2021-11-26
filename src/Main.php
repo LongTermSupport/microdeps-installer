@@ -21,6 +21,10 @@ class Main
     private ComposerJson $vendorComposer;
     public const INSTALL_NAMESPACE = 'MicroDeps';
     private string $projectRoot;
+    private string $originSrcNamespace;
+    private string $newSrcNamespace;
+    private string $originTestNamespace;
+    private string $newTestNamespace;
 
     public function __construct(private Args $args, private Filesystem $filesystem, string $overrideProjectRoot = null)
     {
@@ -32,9 +36,15 @@ class Main
 
     public function run(): void
     {
-        $this->vendorDir       = $this->getVendorDir();
-        $this->projectComposer = ComposerJson::fromDirectory($this->projectRoot);
-        $this->vendorComposer  = ComposerJson::fromDirectory($this->vendorDir);
+        $this->vendorDir           = $this->getVendorDir();
+        $this->projectComposer     = ComposerJson::fromDirectory($this->projectRoot);
+        $this->vendorComposer      = ComposerJson::fromDirectory($this->vendorDir);
+        $this->originSrcNamespace  = rtrim($this->vendorComposer->getSrcNamespace(), '\\');
+        $this->newSrcNamespace     = $this->projectComposer->getSrcNamespace()
+                                     . $this->getInstallSubNamespace($this->originSrcNamespace);
+        $this->originTestNamespace = rtrim($this->vendorComposer->getTestNamespace(), '\\');
+        $this->newTestNamespace    = $this->projectComposer->getTestNamespace()
+                                     . $this->getInstallSubNamespace($this->originTestNamespace);
         $this->copySrc();
         $this->copyTest();
     }
@@ -55,47 +65,38 @@ class Main
         return str_replace('\\', '/', $this->getInstallSubNamespace($vendorNamespace));
     }
 
-    private function copySrc()
+    private function copySrc(): void
     {
-        $vendorNamespace = $this->vendorComposer->getSrcNamespace();
-        $srcFromPath     = $this->vendorDir . '/' . $this->vendorComposer->getSrcPath();
-        $srcToPath       = $this->projectRoot . '/' . $this->projectComposer->getSrcPath() . '/' .
-                           $this->getInstallSubPath($vendorNamespace) . '/';
+        $srcFromPath = $this->vendorDir . '/' . $this->vendorComposer->getSrcPath();
+        $srcToPath   = $this->projectRoot . '/' . $this->projectComposer->getSrcPath() . '/' .
+                       $this->getInstallSubPath($this->originSrcNamespace) . '/';
         $this->copyDir($srcFromPath, $srcToPath);
-        $originNamespace = rtrim($vendorNamespace, '\\');
-        $newNamespace    =
-            rtrim($this->projectComposer->getSrcNamespace() .
-                  '\\' .
-                  $this->getInstallSubNamespace($vendorNamespace) .
-                  '\\');
-        $this->updateNamespace($originNamespace, $newNamespace, $srcToPath);
+        $this->updateNamespace($this->originSrcNamespace, $this->newSrcNamespace, $srcToPath);
     }
 
-    private function copyTest()
+    private function copyTest(): void
     {
         $vendorNamespace = $this->vendorComposer->getTestNamespace();
         $testFromPath    = $this->vendorDir . '/' . $this->vendorComposer->getTestPath();
         $testToPath      = $this->projectRoot . '/' . $this->projectComposer->getTestPath() . '/' .
                            $this->getInstallSubPath($vendorNamespace) . '/';
         $this->copyDir($testFromPath, $testToPath);
-        $originNamespace = rtrim($vendorNamespace, '\\');
-        $newNamespace    =
-            rtrim($this->projectComposer->getTestNamespace() .
-                  '\\' .
-                  $this->getInstallSubNamespace($vendorNamespace) .
-                  '\\');
-        $this->updateNamespace($originNamespace, $newNamespace, $testToPath);
+        $this->updateNamespace($this->originTestNamespace, $this->newTestNamespace, $testToPath);
+        $this->updateNamespace($this->originSrcNamespace, $this->newSrcNamespace, $testToPath);
     }
 
     private function copyDir(string $src, string $dest): void
     {
-        $this->filesystem->exists($dest) || $this->filesystem->mkdir($dest);
+        $this->filesystem->exists($dest) && $this->filesystem->remove($dest);
+        $this->filesystem->mkdir($dest);
         $this->filesystem->mirror($src, $dest);
     }
 
     private function updateNamespace($originNamespace, $newNamespace, string $dir): void
     {
-        $iterator = new \RegexIterator(
+        $originNamespace = trim($originNamespace, '\\');
+        $newNamespace    = $this->removeDoubleSlash(trim($newNamespace, '\\'));
+        $iterator        = new \RegexIterator(
             new RecursiveIteratorIterator(
                 new RecursiveDirectoryIterator(
                     $dir,
@@ -112,8 +113,11 @@ class Main
         foreach ($iterator as $matches) {
             $filePath = $matches[0] ?? throw new \RuntimeException('Unexpected empty match in ' . __METHOD__);
             $content  = \Safe\file_get_contents($filePath);
-            $updated  = str_replace($originNamespace, $newNamespace, $content);
-            $updated  = $this->removeDoubleSlash($updated);
+            $updated  = str_replace(
+                [" $originNamespace", " \\$originNamespace"],
+                [" $newNamespace", " \\$newNamespace"],
+                $content
+            );
             \Safe\file_put_contents($filePath, $updated);
         }
     }

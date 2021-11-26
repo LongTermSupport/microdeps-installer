@@ -1,7 +1,7 @@
 {
   "autoload": {
     "psr-4": {
-      "tooManySrc\\Bar\\": [
+      "Too\\Many\\": [
         "src1/",
         "src2/"
       ]
@@ -9,7 +9,7 @@
   },
   "autoload-dev": {
     "psr-4": {
-      "tooManySrc\\Bar\\Tests\\": [
+      "Too\\Many\\Tests\\": [
         "tests/"
       ]
     }

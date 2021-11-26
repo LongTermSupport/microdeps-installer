@@ -7,7 +7,7 @@ namespace MicroDeps\Installer\Cli;
 #[\Attribute]
 class UsageAttribute
 {
-    public function __construct(private string $usage, private ?string $defaultValue = null)
+    public function __construct(private string $usage, private string $example, private ?string $defaultValue = null)
     {
 
     }
@@ -20,5 +20,10 @@ class UsageAttribute
     public function getDefaultValue(): ?string
     {
         return $this->defaultValue ?? 'no default value, you must pass in this argument';
+    }
+
+    public function getExample(): string
+    {
+        return $this->example;
     }
 }
