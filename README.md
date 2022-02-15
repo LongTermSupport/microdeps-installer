@@ -34,3 +34,24 @@ This will copy the src and test files into your project, and will update namespa
 Once the code has been copied into your project, you are free to update it and extend it as you see fit. Should you wish
 to push/suggest any of your changes in the original MicroDep (please do) then you will need to create a fork and pull
 request as normal.
+
+### PHP QA CI
+
+This package is using PHP QA CI for the quality assurance and continuous integration. You can read more about that here:
+https://github.com/LongTermSupport/php-qa-ci
+
+#### To run QA process locally
+
+To run the full QA process locally, simply run:
+
+```bash
+./bin/qa
+```
+
+## Long Term Support
+
+This package was brought to you by Long Term Support LTD, a company run and founded by Joseph Edmonds
+
+You can get in touch with Joseph at https://joseph.edmonds.contact/
+
+Check out Joseph's recent book [The Art of Modern PHP 8](https://joseph.edmonds.contact/#book)
