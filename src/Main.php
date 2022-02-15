@@ -12,7 +12,7 @@ use RecursiveIteratorIterator;
 use ReflectionClass;
 use RuntimeException;
 use Symfony\Component\Filesystem\Filesystem;
-use Webmozart\Glob\Iterator\RecursiveDirectoryIterator;
+use \RecursiveDirectoryIterator;
 
 class Main
 {
