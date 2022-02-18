@@ -8,11 +8,11 @@ use Composer\Autoload\ClassLoader;
 use FilesystemIterator;
 use InvalidArgumentException;
 use MicroDeps\Installer\Cli\Args;
+use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use ReflectionClass;
 use RuntimeException;
 use Symfony\Component\Filesystem\Filesystem;
-use \RecursiveDirectoryIterator;
 
 class Main
 {
@@ -47,6 +47,8 @@ class Main
                                      . $this->getInstallSubNamespace($this->originTestNamespace);
         $this->copySrc();
         $this->copyTest();
+        echo "\nSuccess..\n";
+        exit(0);
     }
 
     private function getSecondTierNamespace(string $namespace): string
