@@ -13,7 +13,7 @@ class ComposerJson
     private array  $json;
     public const EXCEPTION_FAILED_PARSING_JSON          = 'Failed parsing composer.json, got JsonException %s';
     public const EXCEPTION_FAILED_FINDING_AUTOLOAD      = 'Failed finding psr4 %s';
-    public const EXCEPTION_MULTIPLE_AUTOLOAD            = 'Found more than one autoload folder, not supported';
+    public const EXCEPTION_MULTIPLE_AUTOLOAD            = 'Found more than one autoload folder, not supported: %s';
     public const EXCEPTION_FAILED_GETTING_FILE_CONTENTS = 'Failed getting contents of file %s';
     public const KEY_AUTOLOAD                           = 'autoload';
     public const KEY_AUTOLOAD_DEV                       = 'autoload-dev';
@@ -68,9 +68,11 @@ class ComposerJson
         $autoload = $this->json[$key]['psr-4'] ?? throw new \InvalidArgumentException(
                 sprintf(self::EXCEPTION_FAILED_FINDING_AUTOLOAD, $key)
             );
-        if (count($autoload) > 1) {
-            throw new \InvalidArgumentException(self::EXCEPTION_MULTIPLE_AUTOLOAD);
-        }
+//        if (count($autoload) > 1) {
+//            throw new \InvalidArgumentException(
+//                sprintf(self::EXCEPTION_MULTIPLE_AUTOLOAD, print_r($autoload, true))
+//            );
+//        }
         $namespace = (string)key($autoload);
         $current   = current($autoload);
         $path      = is_string($current) ? $current : current($current);
